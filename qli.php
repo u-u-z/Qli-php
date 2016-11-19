@@ -11,7 +11,7 @@ class Qli{
 	//開發者模式
 	protected $debug_mode = true;
 	
-	//高安全模式(insert使用base64)
+	//高安全模式(数据库输入输出将会使用base64)
 	protected $high_safe_mode = false;
 	
 	//數據庫基本信息
@@ -25,55 +25,26 @@ class Qli{
 	public function __construct($db_info){
 		if($this->leg_cdb_info($db_info)){
 			$v_return = false;
-			//var_dump($db_info);
 			//數據庫基本信息
 			$this->host=$db_info["host"];
 			$this->user=$db_info["user"];
 			$this->pwd=$db_info["pwd"];
 			$this->name=$db_info["name"];
 			$test_result = $this->conncet_test($this->host,$this->user,$this->pwd,$this->name);
+			
 			if($test_result){
-				//echo "連接成功！";
 				$v_return = true;
 			}else{
-				//$this->error("連接失敗！");
 				$v_return = false;
 			}
 
-		/*	echo "<br><br>";
-			var_dump($test_result);
-			echo "合法數據";
-			
-			var_dump($this->host);
-			var_dump($this->user);
-			var_dump($this->pwd);
-			var_dump($this->name);*/
 		}else{
+			
 			$this->error("乃給窩的數據庫基本信息好像不是數組！>_<");
 			$v_return = false;
+
 		}
 		return "haha";
-		/*$all_result = "";//反饋給return用的沒啥大用！
-		if($this->leg_cdb_info($db_info)){
-			
-			$this->host=$db_info["host"];
-			$this->user=$db_info["user"];
-			$this->pwd=$db_info["pwd"];
-			$this->name=$db_info["name"];
-
-			$test_result = $this->conncet_test($this->$host,$this->$user,$this->$pwd,$this->$name);
-			//return //把return寫到if...else裡面不是好習慣喲！
-			if($test_result){
-				$all_result = "成功調用！";
-			}else{
-				$all_result = "失敗的調用TAT";
-			}
-		}else{
-			$this->error("一定要按照要求給我數組喲~ > o <");
-			$all_result = "失敗咯";
-		}
-		*/
-		
 	}
 
 	private function conncet_test($host,$user,$pwd,$name){
@@ -96,9 +67,7 @@ class Qli{
 	}
 	public function insert($table,$arr){
 		$dbc = $this->connect();
-		//echo "-----------------------<br>表名稱:".$table."<br>";
-			//var_dump($test_result);
-			var_dump($dbc);
+		
 		//初始化SQL插入語句前部分
 		$query = "INSERT INTO `".$table."`";
 		
@@ -109,25 +78,19 @@ class Qli{
 		$arr_value = array();
 
 		foreach($arr as $key => $value){
-			//echo "|	".$key."	|	".$value."<br>";
 			array_push($arr_key,$key);
 			array_push($arr_value,$value);
 		}
-		/*
-		var_dump($arr_key);
-		var_dump($arr_value);
-		*/
+		
 		$insert_key = implode("`,`",$arr_key);
 		$insert_key = "`".$insert_key."`";
 		$insert_value = implode("','",$arr_value);
 		$insert_value = "'".$insert_value."'";
-
-		echo "<br>要插入數據庫的key值<br>".$insert_key."<br>";
-		echo "<br>要插入數據庫的value值<br>".$insert_value."<br>";
-
+		
 		$query = $query."(".$insert_key.") VALUES (".$insert_value.")";
 
-		echo "<br>最後的SQL語句偽:<br>".$query;
+		$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
+		
 	}
 
 	public function leg_cdb_info($arr){
@@ -153,7 +116,9 @@ class Qli{
 			array('\\','script','expression'),
 			array('&#x005c','script','expression')
 			);
+		$str = addslashes($str);
 		$str = $this->safe_sql_filter($str);
+
 		return $str;
 	}
 
@@ -172,29 +137,17 @@ class Qli{
 $a = [	"host"=>"127.0.0.1",
 		"user"=>"root",
 		"pwd"=>"root",
-		"name"=>"test"
+		"name"=>"qli"
 		];
 $test = new Qli($a);
 $arr = [	"u_name"=>"蝦米",
 			"u_pwd"=>"xiamispassword",
-			"u_info"=>"UM、、、、"
+			"u_info"=>"Uaasss"
 		];
-$test->insert("tb_user",$arr);
-//
-/*
-echo $test->get_host();
-echo "<br>";
-echo $test->testq();
 
-/*
-調試日誌 
---2016-11-18--
+//$test->insert("tb_user",$arr);
 
-Notice: Undefined variable: base_info in D:\phpStudy\WWW\qli.php on line 22
 
-Fatal error: Uncaught Error: Cannot access empty property in D:\phpStudy\WWW\qli.php:22 Stack trace: #0 D:\phpStudy\WWW\qli.php(77): Qli->__construct(Array) #1 {main} Next Error: Cannot access empty property in D:\phpStudy\WWW\qli.php:22 Stack trace: #0 D:\phpStudy\WWW\qli.php(77): Qli->__construct(Array) #1 {main} thrown in D:\phpStudy\WWW\qli.php on line 22--
 
-不改錯了，先睡覺！= =
-*/
 
 ?>
