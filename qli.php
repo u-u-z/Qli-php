@@ -20,6 +20,7 @@ class Qli{
 	private $pwd;
 	private $name;
 	
+	private $dbc;
 	//構造函數
 	public function __construct($db_info){
 		if($this->leg_cdb_info($db_info)){
@@ -83,27 +84,23 @@ class Qli{
 		mysqli_close($dbc);
 		return true;
 	}
-	private function connect($host,$user,$pwd,$name){
-		$dbc = mysqli_connect($host,$user,$pwd,$name)or die($this->error('<p STYLE="color:red">MySqli數據庫連失敗，看看天然呆的數據庫基本信息是不是錯了喵！</p><br>'.mysqli_connect_errno()." ".mysqli_connect_error()));
-		return true;
+
+	private function connect(){
+		$dbc = mysqli_connect($this->host,$this->user,$this->pwd,$this->name)or die($this->error('<p STYLE="color:red">MySqli數據庫連失敗，看看天然呆的數據庫基本信息是不是錯了喵！</p><br>'.mysqli_connect_errno()." ".mysqli_connect_error()));
+		$this->dbc = $dbc;
+		return $dbc;
 	}
 	//基礎CURD操作看對象方法名字相信您會明白！
 	public function select(){
 
 	}
 	public function insert($table,$arr){
-		$test_result = $this->connect($this->host,$this->user,$this->pwd,$this->name);
+		$dbc = $this->connect();
 		//echo "-----------------------<br>表名稱:".$table."<br>";
 			//var_dump($test_result);
-			if($test_result){
-				$v_return = true;
-				//echo "t數據庫連接成功<br>";
-			}else{
-				$v_return = false;
-				//echo "t數據庫連接失敗<br>";
-			}
+			var_dump($dbc);
 		//初始化SQL插入語句前部分
-		$query = "INSERT INTO ".$table;
+		$query = "INSERT INTO `".$table."`";
 		
 		$insert_key = "";	//鍵
 		$insert_value = "";	//值
@@ -120,8 +117,8 @@ class Qli{
 		var_dump($arr_key);
 		var_dump($arr_value);
 		*/
-		$insert_key = implode(",",$arr_key);
-
+		$insert_key = implode("`,`",$arr_key);
+		$insert_key = "`".$insert_key."`";
 		$insert_value = implode("','",$arr_value);
 		$insert_value = "'".$insert_value."'";
 
@@ -148,6 +145,26 @@ class Qli{
 			//You can logger it in here...(嗯要是生產環境的話這裡貌似管不到了:)
 		}
 	}
+
+	private function safe_filter($str){
+		$str = strip_tags(trim($str));
+		$str = htmlentities($str,ENT_QUOTES,'UTF-8');
+		$str = str_replace(
+			array('\\','script','expression'),
+			array('&#x005c','script','expression')
+			);
+		$str = $this->safe_sql_filter($str);
+		return $str;
+	}
+
+	private function safe_sql_filter($str){
+		$str = mysqli_real_escape_string($this->dbc,trim($str));
+		if($this->high_safe_mode){
+			$str = base64_encode($str);
+		}
+		return $str;
+	}
+
 
 
 }
