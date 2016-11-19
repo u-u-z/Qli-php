@@ -25,33 +25,32 @@ class Qli{
 	public function __construct($db_info){
 		if($this->leg_cdb_info($db_info)){
 			$v_return = false;
+			//var_dump($db_info);
 			//數據庫基本信息
 			$this->host=$db_info["host"];
 			$this->user=$db_info["user"];
 			$this->pwd=$db_info["pwd"];
 			$this->name=$db_info["name"];
 			$test_result = $this->conncet_test($this->host,$this->user,$this->pwd,$this->name);
-			
 			if($test_result){
+				//echo "連接成功！";
 				$v_return = true;
 			}else{
+				//$this->error("連接失敗！");
 				$v_return = false;
 			}
 
 		}else{
-			
 			$this->error("乃給窩的數據庫基本信息好像不是數組！>_<");
 			$v_return = false;
-
 		}
 		return "haha";
+		
 	}
 
 	private function conncet_test($host,$user,$pwd,$name){
 		$dbc = mysqli_connect($host,$user,$pwd,$name)or die($this->error('<p STYLE="color:red">MySqli數據庫連失敗，看看天然呆的數據庫基本信息是不是錯了喵！</p><br>'.mysqli_connect_errno()." ".mysqli_connect_error()));
-		/*
-			mysqli_connect_errno()." ".mysqli_connect_error();
-		*/
+		
 		mysqli_close($dbc);
 		return true;
 	}
@@ -78,6 +77,7 @@ class Qli{
 		$arr_value = array();
 
 		foreach($arr as $key => $value){
+			//echo "|	".$key."	|	".$value."<br>";
 			array_push($arr_key,$key);
 			array_push($arr_value,$value);
 		}
@@ -90,7 +90,68 @@ class Qli{
 		$query = $query."(".$insert_key.") VALUES (".$insert_value.")";
 
 		$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
+	}
+	
+	public function del_row($table,$where){
+		//DELETE FROM table WHERE id='21'
+		//$where = ["id,="=>21]
 		
+		$dbc = $this->connect();
+		$query = "DELETE FROM `".$table."`";
+		$query = $query." WHERE";
+		$arr = $this->format_con($where);
+		
+		$del_key = $arr[0];
+		$del_con = $arr[1];
+		$del_value = $arr[2];
+		
+		if(is_int($del_value)){
+			$query = $query." ".$del_key." ".$del_con."".$del_value;
+		}else{
+			$query = $query." ".$del_key." ".$del_con."'".$del_value."'";
+		}
+		//echo $query;
+
+		$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
+		//测试完成！
+	}
+
+	public function update($table,$data,$where){
+		//$data = ["name"=>"ss","pwd"=>"1213"]
+		$dbc = $this->connect();
+		
+		$query = "UPDATE `".$table."` SET";
+
+		$set_value = "";
+		$arr_set = array();
+
+		foreach($data as $key => $value){
+			if(!is_int($value)){
+				$value = "'".$value."'";
+			}
+			$set_value = "`".$key."` = ".$value;
+			array_push($arr_set,$set_value);
+		}
+
+		$set = implode(" , ",$arr_set);
+
+		$arr = $this->format_con($where);
+
+		$set_key = $arr[0];
+		$set_con = $arr[1];
+		$set_value = $arr[2];
+
+		if(!is_int($set_value)){
+			$set_value = "'".$set_value."'";
+		}
+		/*
+			UPDATE  `tb_user` SET  `u_name` =  '蝦米',`u_pwd` =  'xiamispassword',`u_info` =  '2' WHERE id <  '200'
+		*/
+		$query = $query." ".$set." WHERE ".$set_key." ".$set_con." ".$set_value;
+
+		//echo $query;
+		$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
+
 	}
 
 	public function leg_cdb_info($arr){
@@ -130,6 +191,21 @@ class Qli{
 		return $str;
 	}
 
+	private function format_con($arr){
+		//用于解析where的判断条件
+		//["id,="=>1]
+		//where id = 11
+		foreach($arr as $key => $value){
+			$arr_key = $key;
+			$arr_value = $value;
+		}
+		$condition_arr = explode(",",$arr_key);
+		$where_key = $condition_arr[0];
+		$where_con = $condition_arr[1];
+		$where_value = $arr_value;
+		$return_arr = [$where_key,$where_con,$where_value];
+		return $return_arr;
+	}
 
 
 }
@@ -140,14 +216,16 @@ $a = [	"host"=>"127.0.0.1",
 		"name"=>"qli"
 		];
 $test = new Qli($a);
+
 $arr = [	"u_name"=>"蝦米",
-			"u_pwd"=>"xiamispassword",
-			"u_info"=>"Uaasss"
+			"u_pwd"=>"xi2333333333sword",
+			"u_info"=>"1"
 		];
 
-//$test->insert("tb_user",$arr);
+$test->insert("tb_user",$arr);
 
+$del_arr = ["id,>"=>"2"];
+//$test->del_row("tb_user",$del_arr);
 
-
-
+$test->update("tb_user",$arr,$del_arr);
 ?>
