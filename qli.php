@@ -3,27 +3,64 @@
 	Qli 可能是最萌的 PHP Mysqli CURD 框架(只是個類)
 
 	by: HaradaShino 原田詩乃
-	
-	E-mail: i@linux.dog
+
 */
+
 class Qli{
 
 	//開發者模式
-	protected $debug_mode = false;
+	protected $debug_mode = true;
 	
 	//高安全模式(insert使用base64)
 	protected $high_safe_mode = false;
 	
-	private $base_info = ["host" => "","user" => "","pwd" =>"","name" =>""];
-
+	//數據庫基本信息
+	private $host;		/*若是有端口變動請根據需求自行修改*/
+	private $user;
+	private $pwd;
+	private $name;
+	
+	//構造函數
 	public function __construct($db_info){
-		$all_result = "";//反饋給return用的沒啥大用！
 		if($this->leg_cdb_info($db_info)){
-			$this->$base_info["host"]=$db_info["host"];
-			$this->$base_info["user"]=$db_info["user"];
-			$this->$base_info["pwd"]=$db_info["pwd"];
-			$this->$base_info["name"]=$db_info["name"];
-			$test_result = $this->conncet_test($this->$base_info);
+			$v_return = false;
+			//var_dump($db_info);
+			//數據庫基本信息
+			$this->host=$db_info["host"];
+			$this->user=$db_info["user"];
+			$this->pwd=$db_info["pwd"];
+			$this->name=$db_info["name"];
+			$test_result = $this->conncet_test($this->host,$this->user,$this->pwd,$this->name);
+			if($test_result){
+				//echo "連接成功！";
+				$v_return = true;
+			}else{
+				//$this->error("連接失敗！");
+				$v_return = false;
+			}
+
+		/*	echo "<br><br>";
+			var_dump($test_result);
+			echo "合法數據";
+			
+			var_dump($this->host);
+			var_dump($this->user);
+			var_dump($this->pwd);
+			var_dump($this->name);*/
+		}else{
+			$this->error("乃給窩的數據庫基本信息好像不是數組！>_<");
+			$v_return = false;
+		}
+		return "haha";
+		/*$all_result = "";//反饋給return用的沒啥大用！
+		if($this->leg_cdb_info($db_info)){
+			
+			$this->host=$db_info["host"];
+			$this->user=$db_info["user"];
+			$this->pwd=$db_info["pwd"];
+			$this->name=$db_info["name"];
+
+			$test_result = $this->conncet_test($this->$host,$this->$user,$this->$pwd,$this->$name);
 			//return //把return寫到if...else裡面不是好習慣喲！
 			if($test_result){
 				$all_result = "成功調用！";
@@ -34,26 +71,66 @@ class Qli{
 			$this->error("一定要按照要求給我數組喲~ > o <");
 			$all_result = "失敗咯";
 		}
+		*/
 		
 	}
 
-	private function conncet_test($db_info){
-		$dbc = mysqli_connect($base_info["host"],$base_info["user"],$base_info["pwd"],$base_info["name"])or $this->error("<p STYLE='color:red'>媽的智障！MySqli數據庫連接失敗！</p>");
+	private function conncet_test($host,$user,$pwd,$name){
+		$dbc = mysqli_connect($host,$user,$pwd,$name)or die($this->error('<p STYLE="color:red">MySqli數據庫連失敗，看看天然呆的數據庫基本信息是不是錯了喵！</p><br>'.mysqli_connect_errno()." ".mysqli_connect_error()));
+		/*
+			mysqli_connect_errno()." ".mysqli_connect_error();
+		*/
 		mysqli_close($dbc);
+		return true;
+	}
+	private function connect($host,$user,$pwd,$name){
+		$dbc = mysqli_connect($host,$user,$pwd,$name)or die($this->error('<p STYLE="color:red">MySqli數據庫連失敗，看看天然呆的數據庫基本信息是不是錯了喵！</p><br>'.mysqli_connect_errno()." ".mysqli_connect_error()));
 		return true;
 	}
 	//基礎CURD操作看對象方法名字相信您會明白！
 	public function select(){
 
 	}
-	public function insert(){
+	public function insert($table,$arr){
+		$test_result = $this->connect($this->host,$this->user,$this->pwd,$this->name);
+		//echo "-----------------------<br>表名稱:".$table."<br>";
+			//var_dump($test_result);
+			if($test_result){
+				$v_return = true;
+				//echo "t數據庫連接成功<br>";
+			}else{
+				$v_return = false;
+				//echo "t數據庫連接失敗<br>";
+			}
+		//初始化SQL插入語句前部分
+		$query = "INSERT INTO ".$table;
+		
+		$insert_key = "";	//鍵
+		$insert_value = "";	//值
 
-	}
-	public function update(){
+		$arr_key = array(); 
+		$arr_value = array();
 
-	}
-	public function del_row(){
-	//刪除一個行(好像也有人叫他記錄)
+		foreach($arr as $key => $value){
+			//echo "|	".$key."	|	".$value."<br>";
+			array_push($arr_key,$key);
+			array_push($arr_value,$value);
+		}
+		/*
+		var_dump($arr_key);
+		var_dump($arr_value);
+		*/
+		$insert_key = implode(",",$arr_key);
+
+		$insert_value = implode("','",$arr_value);
+		$insert_value = "'".$insert_value."'";
+
+		echo "<br>要插入數據庫的key值<br>".$insert_key."<br>";
+		echo "<br>要插入數據庫的value值<br>".$insert_value."<br>";
+
+		$query = $query."(".$insert_key.") VALUES (".$insert_value.")";
+
+		echo "<br>最後的SQL語句偽:<br>".$query;
 	}
 
 	public function leg_cdb_info($arr){
@@ -72,10 +149,25 @@ class Qli{
 		}
 	}
 
+
 }
-$a = ["host"=>"acgbag.com","user"=>"HaradaShino","pwd"=>"wwww","name"=>"db"];
+
+$a = [	"host"=>"127.0.0.1",
+		"user"=>"root",
+		"pwd"=>"root",
+		"name"=>"test"
+		];
 $test = new Qli($a);
-var_dump($test);
+$arr = [	"u_name"=>"蝦米",
+			"u_pwd"=>"xiamispassword",
+			"u_info"=>"UM、、、、"
+		];
+$test->insert("tb_user",$arr);
+//
+/*
+echo $test->get_host();
+echo "<br>";
+echo $test->testq();
 
 /*
 調試日誌 
