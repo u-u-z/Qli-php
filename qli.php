@@ -1,9 +1,10 @@
 <?php
 /*
-	Qli 可能是最萌的 PHP Mysqli CURD 框架(只是個類)
+	Qli 可能是最萌的 PHP Mysqli CURD 框架(只是個類) 
 
-	by: HaradaShino 原田詩乃
+	by: HaradaShino 原田詩乃 郵箱: i@linux.dog
 
+	這玩意寫的就跟開玩笑一樣）
 */
 
 class Qli{
@@ -60,24 +61,84 @@ class Qli{
 		$this->dbc = $dbc;
 		return $dbc;
 	}
+	public function sqlquery($str){
+		$dbc = $this->connect();
+
+		$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
+
+	}
+
 	//基礎CURD操作看對象方法名字相信您會明白！
 	public function select(){
 
 	}
 	public function insert($table,$arr){
 		$dbc = $this->connect();
+		if (!$dbc) {
+			$this->error($err_info);
+		}
+		//$sec_key $sec_value
+		$arr_key = array(); 
+		$arr_value = array();
+		$arr_value_par = array();
+		$value_type = "";
+
+		foreach($arr as $key => $value){
+			//$key = $this->safe_filter($key);
+			//$value = $this->safe_filter($value);
+			array_push($arr_key,$key);
+			array_push($arr_value,$value);
+			array_push($arr_value_par,"?");
+
+			if (is_string($value)){
+				$value_type = $value_type."s";
+			}elseif (is_int($value)) {
+				$value_type = $value_type."i";
+			}elseif(is_double($value)){
+				$value_type = $value_type."d";
+			}else{
+				$value_type = $value_type."s";
+			}
+		}
+		$insert_key = implode("` ,`",$arr_key);
+		$insert_key = "`".$insert_key."`";
+		$cou_value = count($arr_value);//獲取值得個數
+
+		$insert_value_par = implode(",",$arr_value_par);
 		
-		//初始化SQL插入語句前部分
-		$query = "INSERT INTO `".$table."`";
-		
-		$insert_key = "";	//鍵
-		$insert_value = "";	//值
+		$stmt = mysqli_prepare($dbc, "INSERT INTO ".$table." (".$insert_key.") VALUES (".$insert_value_par.")");
+		$arr_stmt_bind = array();
+		//mysqli_stmt_bind_param($stmt, $value_type ,$arr_value);
+		array_push($arr_stmt_bind,$stmt);//數組添加$stmt
+		array_push($arr_stmt_bind,$value_type);//數組添加 形如"sssd"的東西
+		foreach($arr as $key => $value){
+			echo $value."<br>";
+			array_push($arr_stmt_bind,$value);//數組添加 字段名
+		}
+		var_dump($arr_stmt_bind);
+		echo "<br>";
+		echo "<br>";
+		echo "<br>";
+
+		var_dump($stmt);
+		echo "<br>";
+		echo $value_type."<br>";
+		//mysqli_stmt_bind_param($stmt, $value_type,$arr_value[0],$arr_value[1],$arr_value[2]);
+		mysqli_stmt_bind_param($stmt, $value_type,...$arr_value);//这是一个语法糖
+		//call_user_func_array("mysqli_stmt_bind_param",$arr_stmt_bind );
+		//mysqli_stmt_bind_param($stmt, $value_type,$arr_value[0],$arr_value[1],$arr_value[2]);
+		//$arr_value[0] = ',$arr_value[1],$arr_value[2]); 这个地方可以干点其他啥的//';
+		//eval('');
+		mysqli_stmt_execute($stmt);//執行
+		mysqli_stmt_close($stmt);//事後
+		/*
 
 		$arr_key = array(); 
 		$arr_value = array();
 
 		foreach($arr as $key => $value){
-			//echo "|	".$key."	|	".$value."<br>";
+			$key = $this->safe_filter($key);
+			$value = $this->safe_filter($value);
 			array_push($arr_key,$key);
 			array_push($arr_value,$value);
 		}
@@ -88,8 +149,8 @@ class Qli{
 		$insert_value = "'".$insert_value."'";
 		
 		$query = $query."(".$insert_key.") VALUES (".$insert_value.")";
-
-		$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
+		echo $query;
+		//$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());*/
 	}
 	
 	public function del_row($table,$where){
@@ -110,7 +171,8 @@ class Qli{
 		}else{
 			$query = $query." ".$del_key." ".$del_con."'".$del_value."'";
 		}
-		//echo $query;
+
+		echo $query;
 
 		$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
 		//测试完成！
@@ -218,14 +280,23 @@ $a = [	"host"=>"127.0.0.1",
 $test = new Qli($a);
 
 $arr = [	"u_name"=>"蝦米",
-			"u_pwd"=>"xi2333333333sword",
-			"u_info"=>"1"
+			"u_pwd"=>"qqqqord",
+			"u_info"=>"1qqqqqqqqqqq"
 		];
 
 $test->insert("tb_user",$arr);
 
-$del_arr = ["id,>"=>"2"];
+//$del_arr = ["id,>"=>"2"];
 //$test->del_row("tb_user",$del_arr);
 
-$test->update("tb_user",$arr,$del_arr);
+//$test->update("tb_user",$arr,$del_arr);
+
+$abc = ["a","b","c"];
+test(...$abc);
+
+function test($a,$b,$c){
+	echo $a;
+	echo $b;
+	echo $c;
+}
 ?>
