@@ -72,6 +72,16 @@ class Qli{
 	public function select(){
 
 	}
+	public function refValues($arr){
+if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
+	$refs = array();
+	foreach($arr as $key => $value)
+		$refs[$key] = &$arr[$key];
+		return $refs;
+	}
+		return $arr;
+}
+
 	public function insert($table,$arr){
 		$dbc = $this->connect();
 		if (!$dbc) {
@@ -107,31 +117,50 @@ class Qli{
 		$insert_value_par = implode(",",$arr_value_par);
 		
 		$stmt = mysqli_prepare($dbc, "INSERT INTO ".$table." (".$insert_key.") VALUES (".$insert_value_par.")");
-		$arr_stmt_bind = array();
-		//mysqli_stmt_bind_param($stmt, $value_type ,$arr_value);
-		array_push($arr_stmt_bind,$stmt);//數組添加$stmt
-		array_push($arr_stmt_bind,$value_type);//數組添加 形如"sssd"的東西
-		foreach($arr as $key => $value){
-			echo $value."<br>";
-			array_push($arr_stmt_bind,$value);//數組添加 字段名
-		}
-		var_dump($arr_stmt_bind);
-		echo "<br>";
-		echo "<br>";
-		echo "<br>";
+		
+		$php_5_arr_value = array();
+		array_push($php_5_arr_value,$stmt);
+		array_push($php_5_arr_value,$value_type);
 
-		var_dump($stmt);
-		echo "<br>";
-		echo $value_type."<br>";
-		//mysqli_stmt_bind_param($stmt, $value_type,$arr_value[0],$arr_value[1],$arr_value[2]);
-		mysqli_stmt_bind_param($stmt, $value_type,...$arr_value);//这是一个语法糖
-		//call_user_func_array("mysqli_stmt_bind_param",$arr_stmt_bind );
-		//mysqli_stmt_bind_param($stmt, $value_type,$arr_value[0],$arr_value[1],$arr_value[2]);
-		//$arr_value[0] = ',$arr_value[1],$arr_value[2]); 这个地方可以干点其他啥的//';
-		//eval('');
+		foreach ($arr_value as $key => $value) {
+			$php_5_arr_value[]=&$value;
+		}
+		call_user_func_array('mysqli_stmt_bind_param',$php_5_arr_value);
 		mysqli_stmt_execute($stmt);//執行
 		mysqli_stmt_close($stmt);//事後
 		/*
+		$php_5_arr_value = array();
+		$a = "32dfff22";
+		$b = "32212";
+		$c = "32fqwf22";
+		$d = "32qwd22";
+		//$php_5_arr_value = [$stmt,"ssss",$a,$b,$c,$d];
+		//call_user_func_array('mysqli_stmt_bind_param',$php_5_arr_value); 
+		mysqli_stmt_bind_param($stmt,"ssss",$a,$b,$c,$d);
+		
+
+		*/
+		//only php 7
+		//mysqli_stmt_bind_param($stmt,"sss",$a,$b,$c);
+		//call_user_func_array('var_dump',array($this->ret("swdw")));
+		/*
+		$wwwarr = array($a,$b,$c);
+		$ab = &$a;
+		$php_5_arr_value[] = $stmt;
+		$php_5_arr_value[] = "sss";
+		$php_5_arr_value[] = &$a;
+		$php_5_arr_value[] = &$b;
+		$php_5_arr_value[] = &$c;
+		*/
+
+		
+		//$wwwarr  = [$this->ret($stmt),$this->ret("sss"),$this->ret($a),$this->ret($b),$this->ret($c)]
+		//mysqli_stmt_bind_param($stmt, $value_type,$arr_value[0],$arr_value[1],$arr_value[2],$arr_value[3]);
+		//mysqli_stmt_bind_param($stmt, $value_type, ...$arr_value);//这是一个语法糖
+		
+		/*
+
+
 
 		$arr_key = array(); 
 		$arr_value = array();
@@ -153,6 +182,9 @@ class Qli{
 		//$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());*/
 	}
 	
+	public function ret($con){
+		return $con;
+	}
 	public function del_row($table,$where){
 		//DELETE FROM table WHERE id='21'
 		//$where = ["id,="=>21]
@@ -279,9 +311,9 @@ $a = [	"host"=>"127.0.0.1",
 		];
 $test = new Qli($a);
 
-$arr = [	"u_name"=>"蝦米",
-			"u_pwd"=>"qqqqord",
-			"u_info"=>"1qqqqqqqqqqq"
+$arr = [	"u_name"=>"1111111111111111111蝦米",
+			"u_pwd"=>"1111111111111111111大号虾米",
+			"u_info"=>"111111111111超大号虾米q"
 		];
 
 $test->insert("tb_user",$arr);
@@ -290,13 +322,4 @@ $test->insert("tb_user",$arr);
 //$test->del_row("tb_user",$del_arr);
 
 //$test->update("tb_user",$arr,$del_arr);
-
-$abc = ["a","b","c"];
-test(...$abc);
-
-function test($a,$b,$c){
-	echo $a;
-	echo $b;
-	echo $c;
-}
 ?>
