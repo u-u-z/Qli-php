@@ -64,8 +64,8 @@ class Qli{
 	public function sqlquery($str){
 		$dbc = $this->connect();
 
-		$result = mysqli_query($dbc,$query) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
-
+		$result = mysqli_query($dbc,$str) or die('wtf'.mysqli_connect_errno()." ".mysqli_connect_error());
+		return $result;
 	}
 
 	//基礎CURD操作看對象方法名字相信您會明白！
