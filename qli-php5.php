@@ -118,14 +118,15 @@ if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
 		$insert_value_par = implode(",",$arr_value_par);
 		
 		$stmt = mysqli_prepare($dbc, "INSERT INTO ".$table." (".$insert_key.") VALUES (".$insert_value_par.")");
-		
+		//echo "INSERT INTO ".$table." (".$insert_key.") VALUES (".$insert_value_par.")";
 		$php_5_arr_value = array();
 		array_push($php_5_arr_value,$stmt);
 		array_push($php_5_arr_value,$value_type);
-
-		foreach ($arr_value as $key => $value) {
-			$php_5_arr_value[]=&$value;
+		for($i=0;$i<count($arr_value);$i++){
+			//array_push($php_5_arr_value,&$value);
+			$php_5_arr_value[]=&$arr_value[$i];
 		}
+
 		call_user_func_array('mysqli_stmt_bind_param',$php_5_arr_value);
 		mysqli_stmt_execute($stmt);//執行
 		mysqli_stmt_close($stmt);//事後
@@ -304,7 +305,7 @@ if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
 
 
 }
-
+/*
 $a = [	"host"=>"127.0.0.1",
 		"user"=>"root",
 		"pwd"=>"root",
@@ -312,9 +313,9 @@ $a = [	"host"=>"127.0.0.1",
 		];
 $test = new Qli($a);
 
-$arr = [	"u_name"=>"1111111111111111111蝦米",
-			"u_pwd"=>"1111111111111111111大号虾米",
-			"u_info"=>"111111111111超大号虾米q"
+$arr = [	"u_name"=>"a",
+			"u_pwd"=>"1",
+			"u_info"=>"q"
 		];
 
 $test->insert("tb_user",$arr);
@@ -323,4 +324,5 @@ $test->insert("tb_user",$arr);
 //$test->del_row("tb_user",$del_arr);
 
 //$test->update("tb_user",$arr,$del_arr);
+*/
 ?>
