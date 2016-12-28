@@ -130,6 +130,7 @@ if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
 		call_user_func_array('mysqli_stmt_bind_param',$php_5_arr_value);
 		mysqli_stmt_execute($stmt);//執行
 		mysqli_stmt_close($stmt);//事後
+		return $dbc;
 		/*
 		$php_5_arr_value = array();
 		$a = "32dfff22";
